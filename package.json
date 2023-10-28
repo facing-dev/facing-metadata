@@ -1,0 +1,28 @@
+{
+  "name": "facing-metadata",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "module": "dist/esm/index.js",
+  "scripts": {
+    "test": "./node_modules/.bin/ts-node ./test/test.ts",
+    "build": "npm run build:cjs && npm run build:esm",
+    "build:cjs": "./node_modules/.bin/tsc",
+    "build:esm": "./node_modules/.bin/tsc -outDir dist/esm -module ES6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facing-dev/facing-metadata.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/facing-dev/facing-metadata/issues"
+  },
+  "homepage": "https://github.com/facing-dev/facing-metadata#readme",
+  "devDependencies": {
+    "@types/node": "^20.8.9",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  }
+}
