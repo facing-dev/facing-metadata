@@ -3,10 +3,10 @@ import { Metadata } from '../dist/index'
 
 const symbol = Symbol('metadata');
 
-const metadata = new Metadata(symbol);
+const metadata = new Metadata<{ [index: string]: any }>(symbol);
 
 (() => {
-    const data = metadata.createData()
+    const data = {}
     class A { }
     class B extends A { }
 
@@ -25,11 +25,11 @@ const metadata = new Metadata(symbol);
     console.assert(metadata.getValueOwn(B, 'kA') === undefined, '8')
 
     metadata.setValue(B, 'kA', 'vA2')
-    
+
     console.assert(metadata.getValue(A, 'kA') === 'vA2', '9')
     console.assert(metadata.getValueOwn(B, 'kA') === undefined, '10')
 
-    metadata.setValueOwn(B, 'kB', 'vB')
+    metadata.setValueOwn(B, 'kB', 'vB', {})
 
     console.assert(metadata.getValue(A, 'kB') === undefined, '11')
     console.assert(metadata.getValueOwn(B, 'kB') === 'vB', '12')

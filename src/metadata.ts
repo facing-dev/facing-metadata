@@ -3,6 +3,10 @@ export class Metadata<T extends {
     [index: string | number | symbol]: any
 }>{
     symbol: symbol
+    /**
+     * Metadata.
+     * @param symbol Optional. Signature for this metadata. It will be set as the key in the target.
+     */
     constructor(symbol = Symbol('faple-metadata')) {
         this.symbol = symbol
     }
@@ -19,10 +23,12 @@ export class Metadata<T extends {
             t = Object.getPrototypeOf(t)
         } while (t !== null)
     }
-    createData(): T {
-        return Object.create(null)
-    }
-    create(target: any, data?: T) {
+    /**
+     * Create metadata in the target.
+     * @param target Target.
+     * @param data   Init metadata.
+     */
+    create(target: any, data: T) {
         if (Object.getOwnPropertyDescriptor(target, this.symbol)) {
             error('Target had metadata')
         }
@@ -30,10 +36,14 @@ export class Metadata<T extends {
             enumerable: false,
             configurable: false,
             writable: false,
-            value: data ?? {}
+            value: data
         })
     }
-
+    /**
+     * Get own metadata.
+     * @param target Target.
+     * @returns Metadata data or undefined.
+     */
     getOwn(target: any): T | undefined {
         const des = Object.getOwnPropertyDescriptor(target, this.symbol)
         if (!des) {
@@ -41,6 +51,11 @@ export class Metadata<T extends {
         }
         return des.value
     }
+    /**
+    * Get metadata in prototype chain.
+    * @param target Target.
+    * @returns Metadata data or undefined.
+    */
     get(target: any): T | undefined {
         let data: T | undefined = undefined
         this.#travel(target, (target, _data) => {
@@ -49,34 +64,69 @@ export class Metadata<T extends {
         })
         return data
     }
+    /**
+    * Get own metadata if it exists.
+    * Create metadata if it does not exists, in this case data is required.
+    * @param target Target.
+    * @returns Metadata data or undefined.
+    */
     obtainOwn(target: any, data?: T) {
         const _data = this.getOwn(target)
         if (_data !== undefined) {
             return _data
         }
-        const __data = data ?? this.createData()
-        this.create(target, __data)
-        return __data
+        if (data === undefined) {
+            throw 'init data is not provided'
+        }
+        this.create(target, data)
+        return data
     }
+    /**
+   * Get own metadata in prototype chain if it exists.
+   * Create metadata if it does not exists, in this case data is required.
+   * @param target Target.
+   * @returns Metadata data or undefined.
+   */
     obtain(target: any, data?: T) {
         const _data = this.get(target)
 
         if (_data !== undefined) {
             return _data
         }
-        const __data = data ?? this.createData()
-        this.create(target, __data)
-        return __data
+        if (data === undefined) {
+            throw 'init data is not provided'
+        }
+        this.create(target, data)
+        return data
     }
-    setValueOwn<K extends keyof T>(target: any, key: K, value: T[K]) {
-        const data = this.obtainOwn(target)
-        data[key] = value
+    /**
+     * Set value in the own mdatadata.
+     * Implement by `obtainOwn`.
+     * @param target Target.
+     * @param key Key.
+     * @param value value.
+     */
+    setValueOwn<K extends keyof T>(target: any, key: K, value: T[K], data?: T) {
+        const _data = this.obtainOwn(target, data)
+        _data[key] = value
     }
-    setValue<K extends keyof T>(target: any, key: K, value: T[K]) {
-        const data = this.obtain(target)
-
-        data[key] = value
+    /**
+    * Set value in the recent mdatadata in prototype chain.
+    * Implement by `obtain`.
+    * @param target Target.
+    * @param key Key.
+    * @param value value.
+    */
+    setValue<K extends keyof T>(target: any, key: K, value: T[K], data?: T) {
+        const _data = this.obtain(target,data)
+        _data[key] = value
     }
+    /**
+     * Get value in the own metadata.
+     * @param target Target.
+     * @param key Key.
+     * @returns 
+     */
     getValueOwn<K extends keyof T>(target: any, key: K) {
         const data = this.getOwn(target)
         if (data === undefined) {
@@ -84,6 +134,11 @@ export class Metadata<T extends {
         }
         return data[key]
     }
+    /**
+    * Get value in the recent mdatadata WHICH HAS THE KEY in prototype chain.
+    * @param target Target.
+    * @param key Key.
+    */
     getValue<K extends keyof T>(target: any, key: K) {
         let value: any | undefined = undefined
         this.#travel(target, (target, _data) => {
