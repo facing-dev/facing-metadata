@@ -1,7 +1,8 @@
 import { error } from './error'
+
 export class Metadata<T extends {
     [index: string | number | symbol]: any
-}>{
+}> {
     symbol: symbol
     /**
      * Metadata.
@@ -10,19 +11,7 @@ export class Metadata<T extends {
     constructor(symbol = Symbol('faple-metadata')) {
         this.symbol = symbol
     }
-    #travel(target: any, traveler: { (target: any, data: T): boolean }) {
-        let t = target
-        do {
-            const data = this.getOwn(t)
-            if (data !== undefined) {
-                if (!traveler(target, data)) {
-                    break
-                }
 
-            }
-            t = Object.getPrototypeOf(t)
-        } while (t !== null)
-    }
     /**
      * Create metadata in the target.
      * @param target Target.
@@ -38,6 +27,20 @@ export class Metadata<T extends {
             writable: false,
             value: data
         })
+    }
+
+    #travel(target: any, traveler: { (target: any, data: T): boolean }) {
+        let t = target
+        do {
+            const data = this.getOwn(t)
+            if (data !== undefined) {
+                if (!traveler(target, data)) {
+                    break
+                }
+
+            }
+            t = Object.getPrototypeOf(t)
+        } while (t !== null)
     }
     /**
      * Get own metadata.
@@ -65,49 +68,17 @@ export class Metadata<T extends {
         return data
     }
     /**
-    * Get own metadata if it exists.
-    * Create metadata if it does not exists, in this case data is required.
-    * @param target Target.
-    * @returns Metadata data or undefined.
-    */
-    obtainOwn(target: any, data?: T) {
-        const _data = this.getOwn(target)
-        if (_data !== undefined) {
-            return _data
-        }
-        if (data === undefined) {
-            throw 'init data is not provided'
-        }
-        this.create(target, data)
-        return data
-    }
-    /**
-   * Get own metadata in prototype chain if it exists.
-   * Create metadata if it does not exists, in this case data is required.
-   * @param target Target.
-   * @returns Metadata data or undefined.
-   */
-    obtain(target: any, data?: T) {
-        const _data = this.get(target)
-
-        if (_data !== undefined) {
-            return _data
-        }
-        if (data === undefined) {
-            throw 'init data is not provided'
-        }
-        this.create(target, data)
-        return data
-    }
-    /**
      * Set value in the own mdatadata.
      * Implement by `obtainOwn`.
      * @param target Target.
      * @param key Key.
      * @param value value.
      */
-    setValueOwn<K extends keyof T>(target: any, key: K, value: T[K], data?: T) {
-        const _data = this.obtainOwn(target, data)
+    setValueOwn<K extends keyof T>(target: any, key: K, value: T[K]) {
+        const _data = this.getOwn(target)
+        if (!_data) {
+            error('Target has not metadata')
+        }
         _data[key] = value
     }
     /**
@@ -117,8 +88,11 @@ export class Metadata<T extends {
     * @param key Key.
     * @param value value.
     */
-    setValue<K extends keyof T>(target: any, key: K, value: T[K], data?: T) {
-        const _data = this.obtain(target,data)
+    setValue<K extends keyof T>(target: any, key: K, value: T[K]) {
+        const _data = this.get(target)
+        if (!_data) {
+            error('Target has not metadata')
+        }
         _data[key] = value
     }
     /**
@@ -130,7 +104,7 @@ export class Metadata<T extends {
     getValueOwn<K extends keyof T>(target: any, key: K) {
         const data = this.getOwn(target)
         if (data === undefined) {
-            return undefined
+            error('Target has not metadata')
         }
         return data[key]
     }
@@ -140,14 +114,19 @@ export class Metadata<T extends {
     * @param key Key.
     */
     getValue<K extends keyof T>(target: any, key: K) {
-        let value: any | undefined = undefined
+        let foundMetadata = false
+        let value: T[K] | undefined = undefined
         this.#travel(target, (target, _data) => {
-            if (!(key in _data)) {
+            foundMetadata = true
+            if (!(key in _data) || _data[key] === undefined) {
                 return true
             }
             value = _data[key]
             return false
         })
-        return value
+        if (!foundMetadata) {
+            error('Target has not metadata')
+        }
+        return value as T[K]
     }
 }

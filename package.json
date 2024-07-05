@@ -1,13 +1,13 @@
 {
   "name": "facing-metadata",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "",
-  "main": "dist/index.js",
+  "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "scripts": {
     "test": "./node_modules/.bin/ts-node ./test/test.ts",
     "build": "npm run build:cjs && npm run build:esm",
-    "build:cjs": "./node_modules/.bin/tsc",
+    "build:cjs": "./node_modules/.bin/tsc -outDir dist/cjs",
     "build:esm": "./node_modules/.bin/tsc -outDir dist/esm -module ES6"
   },
   "repository": {
