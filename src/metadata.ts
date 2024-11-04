@@ -68,6 +68,19 @@ export class Metadata<T extends {
         return data
     }
     /**
+     * Get metadata array in prototype chain.
+     * @param target Target.
+     * @returns Metadata array to acient.
+     */
+    getAll(target: any): T[] {
+        let data: T[] = []
+        this.#travel(target, (target, _data) => {
+            data.push(_data)
+            return true
+        })
+        return data
+    }
+    /**
      * Set value in the own mdatadata.
      * Implement by `obtainOwn`.
      * @param target Target.
